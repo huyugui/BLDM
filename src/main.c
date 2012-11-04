@@ -38,24 +38,26 @@ static OS_STK app_led_stk[APP_TASK_LED_STK_SIZE];
 static OS_STK app_console_stk[APP_TASK_CONSOLE_STK_SIZE];
 
 OS_EVENT *uart_receive_sem;
+OS_EVENT *lcd_console_sem;
 static void app_monitor(void *p_arg)
 {
 	OS_TCB *ptcb;
 	OS_CPU_SR cpu_sr = 0;
+	INT8U err = 0;
 
 	while(1) {
-		/* info("app_monitor\n"); */
-		OSTimeDly(8000);
+		OSTimeDly(5 * OS_TICKS_PER_SEC);
 
-		OS_ENTER_CRITICAL();
+		OSSemPend(lcd_console_sem, 0, &err);
 		ptcb = OSTCBList;
 		while (ptcb->OSTCBPrio != OS_TASK_IDLE_PRIO) {	 /* Go through all TCBs in TCB list */
-			lcd_printf("[%13s]prio:%2d StkUsed:%d%%\n",
+			lcd_printf("[%14s]prio:%2d StkUsed:%d%%\n",
 			ptcb->OSTCBTaskName, ptcb->OSTCBPrio,
 			ptcb->OSTCBStkUsed  *100 / (ptcb->OSTCBStkSize * sizeof(OS_STK)));
 		ptcb = ptcb->OSTCBNext;	/* Point at next TCB in TCB list */
 		}
-		OS_EXIT_CRITICAL();
+
+		OSSemPost(lcd_console_sem);
 	}
 }
 
@@ -68,22 +70,25 @@ void panic()
 
 static void app_led(void *p_arg)
 {
+	INT8U err = 0;
 	info("app_led start...\n");
 	while(1) {
 		GPIO_SetBits(GPIOC, GPIO_Pin_6);
-		OSTimeDly(1000);
+		OSTimeDly(2 * OS_TICKS_PER_SEC);
 		GPIO_ResetBits(GPIOC, GPIO_Pin_6);
-		OSTimeDly(1000);
+		OSTimeDly(2 * OS_TICKS_PER_SEC);
+
+		OSSemPend(lcd_console_sem, 0, &err);
+		if (err != OS_ERR_NONE)
+			lcd_printf("[app_led]sem_err: %d\n", err);
 		lcd_printf("[%ds]CPU usage:%d%%\n", OSTime / 1000, OSCPUUsage);
-		/* panic();*/
+		OSSemPost(lcd_console_sem);
 	}
 }
 
 void NVIC_Configuration(void)
 {
 	NVIC_InitTypeDef NVIC_InitStructure;
-
-	/* NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0); */
 
 	/* Configure the NVIC Preemption Priority Bits */
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
@@ -97,13 +102,16 @@ void NVIC_Configuration(void)
 static void app_console(void *p_arg)
 {
 	char command[20];
+	INT8U err = 0;
 	info("console-task init\n");
 	info("Uart1 @9600bps\n");
 	NVIC_Configuration();
 	xprintf(CONSOLE_PROMPT);
 	while(1) {
 		get_line(command, 20);
+		OSSemPend(lcd_console_sem, 0, &err);
 		lcd_printf("Command:%s\n", command);
+		OSSemPost(lcd_console_sem);
 		parse_command(command);		/* console cmd */
 		xprintf(CONSOLE_PROMPT);
 	}
@@ -112,8 +120,10 @@ static void app_console(void *p_arg)
 static void app_start(void *p_arg)
 {
 	CPU_INT08U os_err;
-	SysTick_Config(SystemFrequency/1000);
+	SysTick_Config(SystemFrequency/OS_TICKS_PER_SEC);
 	OSStatInit();	/* stat task init */
+
+	lcd_console_sem = OSSemCreate(1);
 	os_err = OSTaskCreateExt((void (*)(void *)) app_monitor,
 			(void *) 0,
 			(OS_STK *) & app_monitor_stk[APP_TASK_MONITOR_STK_SIZE - 1], 
@@ -154,7 +164,7 @@ static void app_start(void *p_arg)
 	while(1) {
 		/* info("app_start\n"); */\
 		/* MainTask(); */
-		OSTimeDly(1000);
+		OSTimeDly(OS_TICKS_PER_SEC);
 	}
 }
 
@@ -276,7 +286,7 @@ void dump_stack(int sp, int fp)
 {
 	OS_TCB *ptcb;
 	xprintf("======================================\n");
-	xprintf("FP: 0x%x Stack dump: 0x%x - 0x%x\n", fp, sp, &_eusrstack);
+	xprintf("FP: 0x%x Thread Stack dump: 0x%x - 0x%x\n", fp, sp, &_eusrstack);
 	xprintf("R0   : 0x%8x\n", *(int *)(sp + 0));
 	xprintf("R1   : 0x%8x\n", *(int *)(sp + 4));
 	xprintf("R2   : 0x%8x\n", *(int *)(sp + 8));
@@ -351,12 +361,6 @@ int main(int argc, char *argv[])
 						APP_TASK_START_STK_SIZE,
 						(void *)0,
 						OS_TASK_OPT_STK_CHK | OS_TASK_OPT_STK_CLR);
-	/*
-	CPU_INT08U os_err = OSTaskCreate((void (*)(void *)) app_start,
-			(void *) 0,
-			(OS_STK *) & app_start_stk[APP_TASK_START_STK_SIZE - 1], 
-			(INT8U) APP_TASK_START_PRIO);
-	*/
 	if (os_err == OS_ERR_NONE)
 		OSTaskNameSet(APP_TASK_START_PRIO, (CPU_INT08U *) "init task", &os_err);
 

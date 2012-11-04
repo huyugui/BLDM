@@ -10,12 +10,15 @@ static int ps(int argc, char *argv[])
 	OS_TCB *ptcb;
 	ptcb = OSTCBList;
 	while (ptcb->OSTCBPrio != OS_TASK_IDLE_PRIO) {	 /* Go through all TCBs in TCB list */
-		xprintf("[%16s] PRIO:%2d TimeDelay:%d STACK-SIZE:%d STACK-USAGE:%d%%\n",
+		printf("[%14s] PRIO:%2d TimeDelay:%5d "
+			"STACK-SIZE:%4d STACK-USAGE:%2d%% "
+			"CTXSW:%5d\n",
 			ptcb->OSTCBTaskName,
 			ptcb->OSTCBPrio, 
 			ptcb->OSTCBDly,
 			ptcb->OSTCBStkSize,
-			ptcb->OSTCBStkUsed  *100 / (ptcb->OSTCBStkSize * sizeof(OS_STK)));
+			ptcb->OSTCBStkUsed  *100 / (ptcb->OSTCBStkSize * sizeof(OS_STK)),
+			ptcb->OSTCBCtxSwCtr);
 		ptcb = ptcb->OSTCBNext;	/* Point at next TCB in TCB list */
 	}
 	return 0;
