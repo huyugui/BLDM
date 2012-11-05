@@ -42,7 +42,6 @@ OS_EVENT *lcd_console_sem;
 static void app_monitor(void *p_arg)
 {
 	OS_TCB *ptcb;
-	OS_CPU_SR cpu_sr = 0;
 	INT8U err = 0;
 
 	while(1) {

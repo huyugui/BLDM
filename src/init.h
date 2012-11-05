@@ -33,6 +33,8 @@ struct sys_init core_##func	\
 void xprintf (const char* str, ...);
 void xputc (char c);
 void lcd_printf(char *format, ...);
+void get_line (char *buff, int len);
+void LCD_Initialization(void);
 
 #define info(format, arg...)\
 	xprintf("[%d]" format, OSTime, ## arg);
