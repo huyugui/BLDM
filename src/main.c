@@ -112,6 +112,8 @@ static void app_console(void *p_arg)
 	info("console-task init\n");
 	info("Uart1 @9600bps\n");
 	NVIC_Configuration();
+	SDCard_Init();
+	xprintf("sdcard init\n");
 	xprintf(CONSOLE_PROMPT);
 	while(1) {
 		get_line(command, 20);
@@ -361,7 +363,6 @@ int main(int argc, char *argv[])
 
 	FSMC_LCD_Init();
 	LCD_Initialization();
-	SDCard_Init();
 
 	lcd_printf("****BLDM %s %s****\n", __DATE__, __TIME__);
 	OSInit();

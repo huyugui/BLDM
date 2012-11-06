@@ -63,7 +63,8 @@ static int version(int argc, char *argv[])
 	{
 		while (f_readdir(&dirs, &finfo) == FR_OK) {
 			if(!finfo.fname[0])
-				printf("%s\n", finfo.fname[0]);
+				break;
+			printf("%s\n", finfo.fname);
 		}
 	} 
 	return 0;
