@@ -57,9 +57,9 @@ static int version(int argc, char *argv[])
 	DIR dirs;
 
 	disk_initialize(0);
-	f_mount(0, &fs);				                  //注册到文件系统0区
+	f_mount(0, &fs);	/* 注册到文件系统0区 */
 
-	if (f_opendir(&dirs, "") == FR_OK) 			  //目录打开成功 
+	if (f_opendir(&dirs, "") == FR_OK)	/* 目录打开成功 */
 	{
 		while (f_readdir(&dirs, &finfo) == FR_OK) {
 			if(!finfo.fname[0])

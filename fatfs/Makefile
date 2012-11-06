@@ -22,5 +22,5 @@ libfatfs.a:$(FATFS_OBJS)
 
 .PHONY:clean
 clean:
-	rm libfatfs.a
+	rm -f libfatfs.a
 	find -type f -name '*.o' -print0 |xargs -0 rm -f

@@ -22,7 +22,7 @@ all: libs src ucos fatfs
 	$(OBJCOPY) -O binary $(PROGRAM).elf $(PROGRAM).bin
 	arm-none-eabi-nm -n $(PROGRAM).elf > $(PROGRAM).map
 	@arm-none-eabi-size   -d $(PROGRAM).elf
-	cp main.bin /media/sf_ubuntu/
+	cp -Rf main.bin /media/sf_ubuntu/
 	ctags -R
 	cscope -Rbq
 
@@ -49,4 +49,5 @@ clean:
 	rm -f $(PROGRAM).elf $(PROGRAM).hex $(PROGRAM).bin $(PROGRAM).info_elf $(PROGRAM).info_size map.o map.c main_tmp.elf main.map
 	$(MAKE) -C ucos $@
 	$(MAKE) -C uCGUI $@
-	rm cscope.* tags
+	$(MAKE) -C fatfs $@
+	rm -f cscope.* tags
