@@ -15,6 +15,7 @@
 #include "ili9320.h"
 #include <stdio.h>
 #include <misc.h>
+#include <fatfs_api.h>
 
 extern struct sys_init _module_start[], _core_start[], _core_end[];
 extern struct sys_init _module_end[];
@@ -312,6 +313,12 @@ void dump_stack(int sp, int fp)
 	while(1);
 }
 
+void SDIO_IRQHandler(void)
+{
+  /* Process All SDIO Interrupt Sources */
+  SD_ProcessIRQSrc();
+}
+
 void UsageFault_Handler()
 {
 	xprintf("UsageFault_Handler\n");
@@ -348,6 +355,7 @@ int main(int argc, char *argv[])
 
 	FSMC_LCD_Init();
 	LCD_Initialization();
+	SDCard_Init();
 
 	lcd_printf("****BLDM %s %s****\n", __DATE__, __TIME__);
 	OSInit();

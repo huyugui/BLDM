@@ -1,11 +1,11 @@
 include Makefile.common
 LDFLAGS=$(COMMONFLAGS) -fno-exceptions -ffunction-sections -fdata-sections \
-	-L$(LIBDIR) -L$(UCOSLIB) -L$(GUILIB) -nostartfiles -Wl,--gc-sections,-Tlinker.ld
+	-L$(LIBDIR) -L$(UCOSLIB) -L$(GUILIB) -L$(FATFSLIB) -nostartfiles -Wl,--gc-sections,-Tlinker.ld
 
 LDLIBS += -lc
-LDLIBS += -lstm32  -lgui -luCOS-II -lm
+LDLIBS += -lfatfs -lstm32  -lgui -luCOS-II -lm
 
-all: libs src ucos
+all: libs src ucos fatfs
 	@echo "1. Make ELF without function map table"
 	$(CC) -o $(PROGRAM)_tmp.elf $(LDFLAGS) \
 		src/*.o \
@@ -26,7 +26,7 @@ all: libs src ucos
 	ctags -R
 	cscope -Rbq
 
-.PHONY:libs src ucos uCGUI clean
+.PHONY:libs src ucos uCGUI clean fatfs
 
 libs:
 	$(MAKE) -C libs $@
@@ -39,6 +39,9 @@ ucos:
 
 uCGUI:
 	$(MAKE) -C uCGUI $@
+
+fatfs:
+	$(MAKE) -C fatfs $@
 	
 clean:
 	$(MAKE) -C src $@
